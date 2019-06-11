@@ -1,0 +1,277 @@
+<?php 
+	include('config/class.mysqldb.php');
+    include('config/config.inc.php');
+	include('config/connect.php'); 
+	include('config/thaidate.php');
+	include('config/define.php');
+	$_GET['hn']=$_SESSION['HN'];
+
+
+$sqlyear="select year(vstdate) as viewyear from ovst
+where hn='".$_GET['hn']."'
+group by viewyear
+order by vn desc
+limit ".LimitY;
+$query=$link->query($sqlyear);
+
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript" language="JavaScript">
+
+function displayMessage(printContent) {
+
+mywindow=window.open("http://"+LOCALPATH+"/opdcard/print.php?id="+printContent,"_blank","toolbar=yes, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=550, height=600");
+
+}
+function displayEkg(printContent) {
+
+mywindow=window.open("http://"+LOCALPATH+"/opdcard/ekg.php?id="+printContent,"_blank","toolbar=yes, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=1096, height=775");
+
+}
+//-----
+function open_win()
+{
+var str = document.getElementById("txtSearch").value;
+mywindow=window.open("http://"+LOCALPATH+"/profile_dm_ht.php?hn="+str,"_blank","toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=1400, height=775");
+mywindow.document.title="???????????";
+
+}
+function open_Dent()
+{
+var str = document.getElementById("txtSearch").value;
+mywindow=window.open("http://"+LOCALPATH+"/dent/dentProfile.php?hn="+str,"_blank","toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=1400, height=775");
+mywindow.document.title="???????????";
+
+}
+
+function main()
+{
+	parent.frames[1].location.href = 'leftindex.php'
+//mywindow=window.open("http://www.khammotoproduct.com");
+//document.form1.searchclick.value=values;//????????? post
+//document.form1.submit();
+location.reload();
+
+//return true;
+} 
+//window.onload = main;
+</script>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title>jQuery treeview</title>
+	
+	<link rel="stylesheet" href="jquery.treeview/jquery.treeview.css" />
+	<link rel="stylesheet" href="screen.css" />
+	
+	<script src="jquery.treeview/lib/jquery.js" type="text/javascript"></script>
+	<script src="jquery.treeview/lib/jquery.cookie.js" type="text/javascript"></script>
+	<script src="jquery.treeview/jquery.treeview.js" type="text/javascript"></script>
+	
+	<script type="text/javascript" src="demo.js"></script>
+		<style type="text/css">
+	.fcolor {
+	color: #FFF;
+}
+    </style>
+	</head>
+<body>
+	
+	<!--<h1 id="banner"><a href="http://bassistance.de/jquery-plugins/jquery-plugin-treeview/">jQuery Treeview Plugin</a> Demo</h1>-->
+  <div id="main">
+    <!--<h4>Sample 1 - default</h4>-->
+    
+    <ul id="browser" class="filetree">
+   <table width="100%" height="58" border="0" cellspacing="0" cellpadding="0" background="bar.png">
+        <tr>
+          <td width="100%" height="20" align="center"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td ><h3 class="fcolor">
+                <?php $sqlPt="select concat(pname,fname,' ',lname) as fullname from patient where hn='$_GET[hn]'";
+$dbqueryPt=mysql_db_query($dbname,$sqlPt);
+while ($pt=mysql_fetch_array($dbqueryPt))
+{
+echo $pt['fullname'];
+}?>
+                </h4></td>
+            </tr>
+          </table></td>
+        </tr>
+      </table>
+    <br />
+      <br />
+     <B>OPD</B>
+      <?php while($row=$link->getnext($query)) { 
+	//Month Detail
+		/*	$sqlMonth ="select concat(year(vstdate),'-',month(vstdate)) as viewmonth,replace(vstdate,'/','-') as newdate from ovst
+where hn='".$_GET['hn']."'
+and year(vstdate)='".$row->viewyear."'
+group by viewmonth
+order by vn desc ";
+$queryMonth =mysql_db_query($dbname,$sqlMonth);*/
+
+	?>
+      <li class="closed"><span class="folder"><?php echo intval($row->viewyear+543); ?></span>
+        <ul>
+        <?php
+		$sqlChkClinic="select hn from clinicmember where hn='".$_GET['hn']."' and clinic in ('001','002')";
+        $dbqueryChkClinic=mysql_db_query($dbname,$sqlChkClinic);
+		$Cnumrow=mysql_num_rows($dbqueryChkClinic);
+				if ($Cnumrow > 0){
+							$sqldetail="select ov.vn,replace(ov.vstdate,'/','-') as newdate,ov.vsttime,s.name as spclty,ov.an , ov.o_refer_number as refer ,ov.an from ovst ov
+							left join spclty s on ov.spclty=s.spclty
+							left join er_regist_oper er on ov.vn=er.vn
+							left  join  er_oper_code e on er.er_oper_code=e.er_oper_code
+							where 
+							 ov.hn='".$_GET['hn']."'	
+							and year(ov.vstdate)='".$row->viewyear."'
+							group by ov.vn						
+							order by ov.vn desc
+							limit ".LimitVisitDoctor;
+					}else{
+							$sqldetail="select ov.vn,replace(ov.vstdate,'/','-') as newdate,ov.vsttime,s.name as spclty,ov.an , ov.o_refer_number as refer ,ov.an from ovst ov
+							inner join spclty s on ov.spclty=s.spclty
+							where ov.hn='".$_GET['hn']."'
+							and year(ov.vstdate)='".$row->viewyear."'
+							order by ov.vn desc
+							limit ".LimitVisitDoctor;
+						}
+						$dbquery=mysql_db_query($dbname,$sqldetail);
+						//echo $sqldetail;
+						while($rowdetail=mysql_fetch_array($dbquery)){ ?>
+<li><span class="file"><?php echo "<a href='opdcardViewImage.php?visit=".$rowdetail['vn']."' target='chapter'>".thai_date(strtotime($rowdetail['newdate']))." (".date("H:i",strtotime($rowdetail['vsttime'])).")</a> &nbsp [$rowdetail[spclty]]"; 
+	      if($rowdetail['an']<>''){
+                  echo "<a href='viewchart.php?an=".$rowdetail['an']."' target='chapter'><font color='red'>Admit</font> </a>";
+              }
+          if($rowdetail['refer']<>''){
+                  echo '<font color="#ff0066">Refer</font>';
+              }
+			  ?></span></li>
+<?php } ?>
+        </ul>
+      </li>
+      <?php } ?>
+<!--    </ul>
+  </div>
+  <div id="main">
+  	 <ul id="browser" class="filetree">-->
+     <br />
+
+<!--=============================IPD PART VIEW===================================================  -->  
+     <B>IPD</B>
+        <?php
+		$sql_year_ipd="select year(dchdate) as viewyear from ipt
+where hn='".$_GET['hn']."'
+group by viewyear
+order by vn desc";
+			$dbquery=mysql_db_query($dbname,$sql_year_ipd);
+			while ($result = mysql_fetch_array($dbquery)){
+		?>
+		<li class="closed"><span class="folder"><?php echo intval($result['viewyear']+543); ?></span>
+			<ul>
+            <?php 
+			$sql_ipd_visit="select an,refer_number from ipt
+			    left join referout on ipt.an = referout.vn
+			    where ipt.hn='".$_GET['hn']."' and year(dchdate) ='".$result['viewyear']."' order by an desc"; 
+
+			$dbquery_ipd = mysql_db_query($dbname,$sql_ipd_visit);
+			while($row_ipd = mysql_fetch_array($dbquery_ipd)){
+			?>
+				<li><span class="file"><?php echo "<a href='viewchart.php?an=".$row_ipd['an']."' target='chapter'>".$row_ipd['an']."</a>"; 
+			  if($row_ipd['refer_number']<>''){
+                  echo '<font color="#ff0066">&nbsp[Refer]</font>';
+              }
+
+
+				?></span></li>
+            <?php } ?>
+			</ul>
+		</li>
+        <?php }?>
+             <br />
+
+
+<!--==============================/IPD PART VIEW====================================  -->  
+
+
+
+<!--     	<B>EKG</B>
+        <?php 
+		$sql_year_ekg="select year(e.vstdate) as viewyear from er_regist e 
+		inner join ovst o on e.vn=o.vn
+where o.hn='".$_GET['hn']."'
+and e.er_list like '%EKG%'
+group by viewyear
+order by e.vn desc";
+			$dbquery=mysql_db_query($dbname,$sql_year_ekg);
+			while ($result_ekg = mysql_fetch_array($dbquery)){
+		?>
+		<li class="closed"><span class="folder"><?php echo intval($result_ekg['viewyear']+543); ?></span>
+			<ul>
+            <?php 
+		//	$sql_ipd_visit="select vn from er_regist where hn='".$_POST['txtSearch']."' and year(dchdate) ='".$result['viewyear']."' order by an desc"; 
+	//		$sql_ekg="select vn,replace(vstdate,'/','-') as newdate from ovst where hn='".$_POST['txtSearch']."'";
+			$sql_ekg="select e.vn,replace(e.vstdate,'/','-') as newdate  from er_regist e
+inner join ovst o on e.vn=o.vn
+where o.hn='".$_GET['hn']."'
+and er_list like '%EKG%'";
+
+			$dbquery_ekg = mysql_db_query($dbname,$sql_ekg);
+			while($row_ekg = mysql_fetch_array($dbquery_ekg)){
+			?>
+				<?php //echo "<a href='viewchart.php?an=".$row_ekg['an']."' target='chapter'>".$row_ekg['an']."</a>";
+                        $dir = '../EKG/'.intval($_GET['hn']).'/';
+    					$ext = '.png';
+    					$search =$row_ekg['vn'];//$_POST['searchclick'];
+    					$results = glob("$dir".$search."*.png");
+						//echo $search;
+						$filecount=count(glob("$dir".$search."*.png"));
+						        foreach($results as $item) {
+									//echo substr($item,7,-4);
+									//echo $item;
+									//if($filecount>1){
+										$ekg=basename($item,".png");	
+										
+									//}else{
+									//	$ekg=substr($item,7,-4);
+									//}
+									if(substr($ekg,0,12)==$row_ekg['vn']){	
+									
+									//echo $ekg."#".$i;
+										if(substr($result_ekg['viewyear']+543,2,2)==substr($ekg,0,2)){
+											//$i++;
+											if($filecount>1){
+												echo "<li><span class='file'><a href='javascript:displayEkg(".$row_ekg['vn']."0".++$i.")'>".thai_date(strtotime($row_ekg['newdate']))." # ".$i."</a> </span></li>";
+											}else{
+												echo "<li><span class='file'><a href='javascript:displayEkg(".$row_ekg['vn'].")'>".thai_date(strtotime($row_ekg['newdate']))."</a> </span></li>";
+											}   
+										}
+									}
+        						}
+		?>
+                
+            <?php } ?>
+			</ul>
+		</li>
+        <?php }?>-->
+        <br /><p><?php $sqlClinic="select hn from clinicmember where hn='".$_GET['hn']."' and clinic not in (99)";
+$dbqueryClinic=mysql_db_query($dbname,$sqlClinic);
+$numrow=mysql_num_rows($dbqueryClinic);
+if ($numrow !=0){
+?>
+      
+      <span class="file"><?php echo "<a href=profile_dm_ht.php?hn=$ptHN target=chapter>DM HT Profile</a>";?></span><br />
+      <?php }?> 
+     <span class="file"><?php echo "<a href=pkckd/index.php?hn=$ptHN target=chapter>CKD Stage</a>";?></span><br />
+	 <span class="file"><?php echo "<a href=dentProfile.php?hn=$ptHN target=chapter>Dent Profile</a>";?></span><br />        <span class="file"><?php echo "<a href=pkvcc/index.php?hn=$ptHN target=chapter>VACCINE List</a>";?></span><br />
+       <span class="file"><?php echo "<a href=pkasthma/index.php?hn=$ptHN target=chapter>ASTHMA & COPD</a>";?></span><br />
+      <span class="file"><?php echo "<a href=hdcservice/index.php?hn=$ptHN target=chapter>SERVICE_HDC </a>";?></span> <br />
+
+<B>รับบริการที่อื่น HDC--VISIT </B>
+   	<span class="file"><?php echo "<a href=hdcservice/index.php?hn=$ptHN target=chapter> HDC </a>";?></span> <br />
+
+
+
+  </div>
+</body></html>
+

@@ -1,0 +1,1969 @@
+<?php
+include("conn/conn.php");
+
+function get_year_begin($data){
+		$y = (($data)-1);
+		$m = "10";
+		$d = "01";
+		$date_begin = $y."/".$m."/".$d;
+		return $date_begin;
+
+}
+
+function get_year_end($data){
+		$y = (($data));
+		$m = "09";
+		$d = "30";
+		$date_begin = $y."/".$m."/".$d;		
+		return $date_begin;
+
+}
+
+
+function get_anc($d1,$d2){
+		//$d1 = get_date_sql($d1);
+		//$d2 = get_date_sql($d2);
+		$sql = "select ifnull(count(*),0) as C_vn from person_anc_service where anc_service_date between '$d1' and '$d2' 
+		    and anc_service_type_id = 1";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+			while($result = mysql_fetch_array($query)){
+				$CC = $result['C_vn'];
+			}
+		return $CC;
+}
+
+
+function get_fp($d1,$d2){
+		//$d1 = get_date_sql($d1);
+		//$d2 = get_date_sql($d2);
+		$sql = "select count(*) as women_fp from person_women_service where women_service_id = 1 and  service_date between '$d1' and '$d2'";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+			while($result = mysql_fetch_array($query)){
+				$CC = $result['women_fp'];
+			}
+		return $CC;
+}
+
+
+
+
+function get_mch($d1,$d2){
+		//$d1 = get_date_sql($d1);
+		//$d2 = get_date_sql($d2);
+		$sql = "select ifnull(count(distinct(person_anc_id)),0) as C_pid,ifnull(count(*),0) as C_vn from person_anc_preg_care
+		        where care_date between '$d1' and '$d2'";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+			while($result = mysql_fetch_array($query)){
+				$C_pid = $result['C_pid'];
+				$C_vn  = $result['C_vn'];
+
+			}
+		return $C_pid . " : " .$C_vn   ;
+}
+
+
+
+
+
+function get_pp($d1,$d2){
+		//$d1 = get_date_sql($d1);
+		//$d2 = get_date_sql($d2);
+		$sql = "select ifnull(count(distinct(person_wbc_id)),0) as C_pid , ifnull(count(*),0) as C_vn from person_wbc_post_care
+		        where care_date between '$d1' and '$d2'";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+			while($result = mysql_fetch_array($query)){
+				$C_pid = $result['C_pid'];
+				$C_vn  = $result['C_vn'];
+
+			}
+		return $C_pid . " : " .$C_vn   ;
+}
+
+
+
+function get_vaccine($d1,$d2){
+		//$d1 = get_date_sql($d1);
+		//$d2 = get_date_sql($d2);
+		$sql_wbc = "select ifnull(count(*),0) as C_wbc from person_wbc_vaccine_detail wbc_vac
+		left join person_wbc_service wbc_service on wbc_vac.person_wbc_service_id = wbc_service.person_wbc_service_id
+		where wbc_service.service_date between '$d1' and '$d2' " ;
+		$query_wbc = mysql_query($sql_wbc);
+		$num_row = mysql_num_rows($query_wbc);
+			while($result_wbc = mysql_fetch_array($query_wbc)){
+				$CC_wbc = $result_wbc['C_wbc'];
+			}
+
+		$sql_epi =  "select ifnull(count(*),0) as C_epi from person_epi_vaccine_list epi_vac
+		left join person_epi_vaccine epi_service on epi_vac.person_epi_vaccine_id = epi_service.person_epi_vaccine_id
+		where epi_service.vaccine_date between '$d1' and '$d2'  " ;
+		$query_epi = mysql_query($sql_epi);
+		$num_row = mysql_num_rows($query_epi);
+			while($result_epi = mysql_fetch_array($query_epi)){
+				$CC_epi = $result_epi['C_epi'];
+			}
+
+
+		return  ($CC_wbc) + ($CC_epi) ; 
+		//return  $sql_wbc . " union ". $sql_epi ; 
+
+}
+
+
+
+function get_nutrition($d1,$d2){
+		//$d1 = get_date_sql($d1);
+		//$d2 = get_date_sql($d2);
+		$sql_wbc = "select ifnull(count(distinct(person_wbc_id)),0) as C_hn_wbc, ifnull(count(person_wbc_id),0) as C_nutri from person_wbc_nutrition
+					where nutrition_date  between '$d1' and '$d2'" ;
+		$query_wbc = mysql_query($sql_wbc);
+		$num_row = mysql_num_rows($query_wbc);
+			while($result_wbc = mysql_fetch_array($query_wbc)){
+				$CC_wbc = $result_wbc['C_nutri'];
+				$CC_wnc_hn = $result_wbc['C_hn_wbc'];
+			}
+
+		$sql_epi =  "select ifnull(count(distinct(person_epi_id)),0) as C_hn_epi,ifnull(count(person_epi_id),0) as C_nutri from person_epi_nutrition
+					where nutrition_date  between '$d1' and '$d2'" ;
+		$query_epi = mysql_query($sql_epi);
+		$num_row = mysql_num_rows($query_epi);
+			while($result_epi = mysql_fetch_array($query_epi)){
+				$CC_epi = $result_epi['C_nutri'];
+				$CC_epi_hn = $result_epi['C_hn_epi'];
+			}
+
+
+		return     ($CC_wnc_hn+$CC_epi_hn)." : ". ($CC_wbc+$CC_epi); 
+		//return  $sql_epi ;
+
+}
+
+
+
+
+function get_development($d1,$d2){
+		//$d1 = get_date_sql($d1);
+		//$d2 = get_date_sql($d2);
+		$sql_wbc = "select ifnull(count(*),0) as C_develop  from person_wbc_service  
+					where wbc_development_assess_id is not null and service_date between '$d1' and '$d2' " ;
+		$query_wbc = mysql_query($sql_wbc);
+		$num_row = mysql_num_rows($query_wbc);
+			while($result_wbc = mysql_fetch_array($query_wbc)){
+				$C_wbc = $result_wbc['C_develop'];
+			}
+
+		$sql_epi =  "select ifnull(count(*),0) as C_develop from person_epi_vaccine  
+					where wbc_development_assess_id is not null and vaccine_date  between '$d1' and '$d2'" ;
+		$query_epi = mysql_query($sql_epi);
+		$num_row = mysql_num_rows($query_epi);
+			while($result_epi = mysql_fetch_array($query_epi)){
+				$C_epi = $result_epi['C_develop'];
+			}
+
+
+		return  (($C_wbc) + ($C_epi)) ; 
+		//return  $sql_wbc ;
+
+}
+
+
+function get_survey($d1,$d2){
+
+		$sql_house = "select ifnull(count((house_id)),0) as C_house from house_survey
+		where survey_date between '$d1' and '$d2'  " ;
+		$query_house = mysql_query($sql_house);
+		$num_row = mysql_num_rows($query_house);
+			while($result_house = mysql_fetch_array($query_house)){
+				$CC_house = $result_house['C_house'];
+			}
+
+		$sql_person_vist =  "select ifnull(count((person_id)),0) as C_pid from person_visit
+		where visit_date between '$d1' and '$d2'    " ;
+		$query_person_vist = mysql_query($sql_person_vist);
+		$num_row = mysql_num_rows($query_person_vist);
+			while($result_person_vist = mysql_fetch_array($query_person_vist)){
+				$CC_person_vist = $result_person_vist['C_pid'];
+			}
+
+
+		return  $CC_house ." : ". $CC_person_vist ; 
+
+}
+
+
+
+
+function get_date_sql($date_th_format){
+		
+		$date_insert  =  substr($date_th_format,6,4)-543;
+		$date_insert  =  $date_insert."/".substr($date_th_format,3,2);
+		$date_insert  =  $date_insert."/".(substr($date_th_format,0,2));
+		return $date_insert;
+}
+
+function get_date_show($date_f){		
+		$date_show  =  substr($date_f,8,2);
+		$date_show  =  $date_show."-".substr($date_f,5,2);
+		$date_show  =  $date_show."-".(substr($date_f,0,4)+543);
+		return $date_show;
+}
+
+
+function  get_date_end($m){			
+			switch($m) {
+					case 1  : $d = "31" ;
+					 case 2  : $d = "28" ;
+					  case 3  : $d = "31" ;
+					   case 4  : $d = "30" ;
+					    case 5  : $d = "31" ;
+					     case 6  : $d = "30" ;
+					      case 7  : $d = "31" ;
+					 	   case 8  : $d = "31" ;
+						    case 9  : $d = "30" ;
+							 case 10  : $d = "31" ;
+							  case 11  : $d = "30" ;
+							   case 12  : $d = "31" ;
+			}	
+			
+			return $d;
+}
+
+
+
+
+function get_anc_table($d1,$d2){
+		$sql = "select year(anc_service_date) as year_,month(anc_service_date) as month_, concat(month(anc_service_date),'-',year(anc_service_date)) as month_show,ifnull(count(*),0) as C_vn from person_anc_service 
+				where anc_service_date between '$d1' and '$d2' group by month(anc_service_date) order by year(anc_service_date) , month(anc_service_date) ";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>เดือน</th>
+                                        <th>จำนวน </th>
+                                        <th>...</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+
+			while($result = mysql_fetch_array($query)){
+					
+					$C_vn  = $result['C_vn'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$tb = $tb."	<tr>
+									<td>$month_show</td>
+									<td>$C_vn</td>
+									<td><a target='bank_' href='showdetail.php?id=anc&Y=$year_&M=$month_'>...</a></td> 
+                                 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>-:-</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-------get_anc_table --------------------
+
+
+
+
+
+	function get_anc_detail($Y,$M){
+		$sql = "select concat(ps.pname ,' ',ps.fname,' ',ps.lname) as Name_ , 
+				ps_service.anc_service_date as date_serv ,ps.age_y,ps.cid ,ps_service.pa_week ,ps_anc.preg_no,
+					(case when ((ps_service.pa_week between 4 and 45))then  
+						(case when 		(ps_anc.preg_no is null) then '#FF0000' else '' end )
+					else '#FF0000' end) as color ,ps_anc.lmp 
+				from person_anc_service ps_service
+				left JOIN person_anc ps_anc on ps_service.person_anc_id = ps_anc.person_anc_id
+				left join person ps on ps_anc.person_id = ps.person_id
+				where year(ps_service.anc_service_date)= '$Y' and month(ps_service.anc_service_date)= '$M' order by ps_service.anc_service_date";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อ - สกุล </th>
+										<th>อายุครรภ์</th>
+										<th>ครรภ์ที่</th>
+										<th>LMP</th>
+                                        <th>วันที่รับบริการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+
+			while($result = mysql_fetch_array($query)){
+					
+					//$C_vn  = $result['C_vn'];
+					$Name_ = $result['Name_'];
+					$date_serv = get_date_show($result['date_serv']);
+					$GA  = $result['pa_week'];
+					$color  = $result['color'];
+					$pre_no  = $result['preg_no'];
+					$lmp  = get_date_show($result['lmp']);
+					//$sum_C_vn  = $sum_C_vn + $C_vn ;
+					if($GA){
+
+					}
+					$tb = $tb."	<tr >
+									<td><font color='$color'>$items</font></td>
+									<td><font color='$color'>$Name_</font></td>
+									<td><font color='$color'>$GA</font></td>
+									<td><font color='$color'>$pre_no</font></td>
+									<td><font color='$color'>$lmp</font></td>
+									<td><font color='$color'>$date_serv</font></td> 
+                                 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//---------------/get_anc_detail/--------------------------
+
+
+
+
+
+function get_vaccine_table($d1,$d2){
+		$sql = "select year(wbc_service.service_date) as year_ , concat(month(wbc_service.service_date) , '-' ,year(wbc_service.service_date)) as month_show, 
+				month(wbc_service.service_date) as month_ , count(*) as C_vn
+				from person_wbc_vaccine_detail wbc_vac
+				left join person_wbc_service wbc_service on wbc_vac.person_wbc_service_id = wbc_service.person_wbc_service_id
+				where wbc_service.service_date between '$d1' and '$d2' group by year(wbc_service.service_date)  , month(wbc_service.service_date) ";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>เดือน</th>
+                                        <th>จำนวน </th>
+                                        <th>...</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+			while($result = mysql_fetch_array($query)){					
+					$C_vn  = $result['C_vn'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$C_vn_  = $C_vn;
+
+					 $sql_epi =  "select  ifnull(count(vn),0) as C_epi from person_epi_vaccine_list epi_vac
+								left join person_epi_vaccine epi_service on epi_vac.person_epi_vaccine_id = epi_service.person_epi_vaccine_id
+								where year(epi_service.vaccine_date) = $year_ and month(epi_service.vaccine_date) = $month_  group by year(epi_service.vaccine_date) , month(epi_service.vaccine_date) " ;
+								$query_epi = mysql_query($sql_epi); 
+								$num_row = mysql_num_rows($query_epi);
+									while($result_epi = mysql_fetch_array($query_epi)){
+										$CC_epi = $result_epi['C_epi'];										
+									}
+
+									$C_vn = $CC_epi + $C_vn ;
+									$sum_C_vn  = $sum_C_vn + $C_vn_ + $CC_epi;
+									$tb = $tb."	<tr>
+													<td>$month_show</td>
+													<td>$C_vn</td>
+													<td><a target='bank_' href='showdetail.php?id=vaccine&Y=$year_&M=$month_'>...</a></td> 
+												 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>-:-</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//--/get_vaccine_table -------------------
+
+
+
+
+
+
+
+	function get_vaccine_detail($Y,$M){
+		$sql = "select 'W' as Type,wbc_vac.person_wbc_vaccine_detail_id as id_,concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ , 
+				concat(wbc_vaccine.wbc_vaccine_name,'[',wbc_vaccine.check_code,']' ) as Vacc_name, 
+				wbc_service.service_date as date_serv ,concat(ps.person_id,wbc_service.service_date,wbc_vaccine.export_vaccine_code) as vccexport_
+				from person_wbc_vaccine_detail wbc_vac 
+				left join person_wbc_service wbc_service on wbc_vac.person_wbc_service_id = wbc_service.person_wbc_service_id 
+				left join person_wbc ps_wbc on wbc_service.person_wbc_id = ps_wbc.person_wbc_id 
+				left join wbc_vaccine on wbc_vac.wbc_vaccine_id = wbc_vaccine.wbc_vaccine_id 
+				left join person ps on ps_wbc.person_id = ps.person_id 
+				where year(wbc_service.service_date)= '$Y' and month(wbc_service.service_date) = '$M' 
+
+				UNION
+
+				select 'E' as Type,epi_vac.person_epi_vaccine_list_id as id_ , concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ , 
+				concat(epi_vaccine.epi_vaccine_name,'[',epi_vaccine.check_code,']') as Vacc_name, 
+				epi_service.vaccine_date as date_serv ,concat(ps.person_id,epi_service.vaccine_date,epi_vaccine.export_vaccine_code) as vccexport_
+				from person_epi_vaccine_list epi_vac 
+				left join person_epi_vaccine epi_service on epi_vac.person_epi_vaccine_id = epi_service.person_epi_vaccine_id 
+				left join person_epi ps_epi on epi_service.person_epi_id = ps_epi.person_epi_id 
+				left join epi_vaccine on epi_vac.epi_vaccine_id = epi_vaccine.epi_vaccine_id 
+				left join person ps on ps_epi.person_id = ps.person_id 
+				where year(epi_service.vaccine_date) = '$Y' and month(epi_service.vaccine_date) =  '$M' 
+				order by Date_serv,Name_,Vacc_name ";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อ - สกุล </th>
+                                        <th>วันที่</th>
+										<th>วัคซีนที่ได้รับ</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+            $vcc_chk  = "";
+			$vcc_chk1  = "";
+			while($result = mysql_fetch_array($query)){
+					//ตรวจสอบความซ้ำซ้อน
+					$vccexport  = $result['vccexport_'];
+					$Name_ = wordwrap($result['Name_'],50,"\n",true);
+					if($vcc_chk1==$vccexport){
+					        $color = "#FF0000";
+							$vcc_chk1="";
+							$Name_ = wordwrap(trim($result['Name_'])."(".trim($result['Type']).trim($result['id_']).")",50,"\n",true);
+					}else{
+							$color = "";
+							$vcc_chk1 = $vccexport;
+					}
+					
+					
+					$id_  = $result['id_'];
+					$date_serv = wordwrap(get_date_show(trim($result['date_serv'])),17,"\n",false);
+					$Vacc_name  = wordwrap($result['Vacc_name'],65,"\n",true);
+					$tb = $tb."	<tr>
+									<td><font color='$color'>$items</font></td>
+									<td><font color='$color'>$Name_</font></td>
+									<td><font color='$color'>$date_serv</font></td> 
+									<td><font color='$color'>$Vacc_name</font></td> 
+                                 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-----------------get_vaccine_detail ----------------------
+
+
+
+
+
+
+function get_fp_table($d1,$d2){
+		$sql = "select year(service_date) as year_,month(service_date) as month_, concat(month(service_date),'-',year(service_date)) as    month_show,ifnull(count(*),0) as C_vn from person_women_service 
+				where women_service_id = 1 and  service_date between '$d1' and '$d2' group by month(service_date) order by year(service_date) , month(service_date) ";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>เดือน</th>
+                                        <th>จำนวน </th>
+                                        <th>...</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+
+			while($result = mysql_fetch_array($query)){
+					
+					$C_vn  = $result['C_vn'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$tb = $tb."	<tr>
+									<td>$month_show</td>
+									<td>$C_vn</td>
+									<td><a target='bank_' href='showdetail.php?id=fp&Y=$year_&M=$month_'>...</a></td> 
+                                 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>-:-</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-------get_fp_table --------------------
+
+
+
+
+
+	function get_fp_detail($Y,$M){
+		$sql = "select concat(ps.pname ,' ',ps.fname,' ',ps.lname) as Name_ , women_birth_control_name as type_fp ,
+				ps_service.service_date as date_serv ,ps.age_y,ps.cid ,case when ps_wom.women_birth_control_id is null then '#000FF' else '' end as color
+				, concat(ps.person_id,service_date,ps_wom.women_birth_control_id) as sum_text ,ps_service.person_women_id as id_
+				from person_women_service ps_service
+				left JOIN person_women ps_wom on ps_service.person_women_id = ps_wom.person_women_id
+				LEFT JOIN women_birth_control wom_bith on ps_wom.women_birth_control_id = wom_bith.women_birth_control_id
+				LEFT JOIN person ps on ps_wom.person_id = ps.person_id
+				where ps_service.women_service_id = 1  and year(service_date) = '$Y'  and  month(service_date) = '$M' order by date_serv,ps.person_id,ps_wom.women_birth_control_id ";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อ - สกุล </th>
+                                        <th>วันที่</th>
+										<th>ประเภท</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+			$fp_chk1  ="";
+			while($result = mysql_fetch_array($query)){
+					$id_  = $result['id_'];
+					$color  = $result['color'];
+					$Name_ = $result['Name_'];
+					$date_serv = get_date_show($result['date_serv']);
+					$type_fp  = $result['type_fp'];
+					$sum_text  = $result['sum_text'];
+					//$sum_C_vn  = $sum_C_vn + $C_vn ;
+
+
+							if($fp_chk1==$sum_text){
+								$color = "#FF0000";
+								$fp_chk1="";	
+								$Name_  = trim($Name_)."(".trim($id_).")";
+							}else{
+								$color = $color;
+								$fp_chk1 = $sum_text;
+							}
+					$tb = $tb."	<tr>
+									<td><font color='$color'>$items</font></td>
+									<td><font color='$color'>$Name_</font></td>
+									<td><font color='$color'>$date_serv</font></td>
+									<td><font color='$color'>$type_fp</font></td> 
+                                 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+				return $tb;
+
+	}//---------------/get_fp_detail/--------------------------
+
+
+
+
+
+
+
+
+function get_nutrition_table($d1,$d2){
+		$sql = "select year(nutrition_date) as year_ , concat(month(wbc_nutri.nutrition_date) , '-' ,year(wbc_nutri.nutrition_date)) as month_show, 
+				month(wbc_nutri.nutrition_date) as month_ , ifnull(count(distinct(wbc_nutri.person_wbc_id)),0) as C_hn,ifnull(count(*),0) as C_vn
+				from person_wbc_nutrition wbc_nutri
+				where wbc_nutri.nutrition_date between '$d1' and '$d2' group by year(wbc_nutri.nutrition_date)  , month(wbc_nutri.nutrition_date) ";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>เดือน</th>
+                                        <th>จำนวน </th>
+                                        <th>...</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+			$sum_C_hn = 0;
+			while($result = mysql_fetch_array($query)){					
+					$C_vn  = $result['C_vn'];
+					$C_hn  = $result['C_hn'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$C_vn_  = $C_vn;
+					$C_hn_  = $C_hn;
+
+					 $sql_epi =  "select  ifnull(count(distinct(person_epi_id)),0) as C_epi_hn,ifnull(count(*),0) as C_epi from person_epi_nutrition
+								where year(nutrition_date) = $year_ and month(nutrition_date) = $month_  group by year(nutrition_date) , month(nutrition_date) " ;
+								$query_epi = mysql_query($sql_epi); 
+								$num_row = mysql_num_rows($query_epi);
+									while($result_epi = mysql_fetch_array($query_epi)){
+										$CC_epi = $result_epi['C_epi'];	
+										$CC_epi_hn  =$result_epi['C_epi_hn'];	
+									}
+
+									$C_vn = $CC_epi + $C_vn ;
+									$C_hn = $CC_epi_hn + $C_hn ;
+									$sum_C_vn  = $sum_C_vn + $C_vn_ + $CC_epi;
+									$tb = $tb."	<tr>
+													<td>$month_show</td>
+													<td>$C_vn</td>
+													<td><a target='bank_' href='showdetail.php?id=nutrition&Y=$year_&M=$month_'>...</a></td> 
+												 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>-:-</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//--/get_nutrition_table -------------------
+
+
+
+
+
+
+	function get_nutrition_detail($Y,$M){
+		$sql = "select  concat(person_epi_nutrition.person_epi_nutrition_id,'-EPI') as Type,concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,ifnull(person_epi_nutrition.age_y,0) as age, 
+				nutrition_level.name as nuti_lev ,
+				height_level.name as height_lev ,
+				bmi_level.name as bmi_lev ,nutrition_date as date_serv,
+				if(person_epi_nutrition.person_nutrition_childdevelop_type_id is null , '#FF0000',
+					if(person_epi_nutrition.person_nutrition_food_type_id is null , '#FF0000', 
+							if(person_epi_nutrition.person_nutrition_bottle_type_id is null,'#FF0000',''))) as color
+				from person_epi_nutrition
+				left join nutrition_level on person_epi_nutrition.nutrition_level = nutrition_level.nutrition_level
+				left join height_level  on   person_epi_nutrition.height_level = height_level.height_level
+				left join person_epi  on  person_epi_nutrition.person_epi_id = person_epi.person_epi_id
+				left join bmi_level  on  person_epi_nutrition.bmi_level = bmi_level.bmi_level
+				left join person ps on  person_epi.person_id = ps.person_id
+				where year(nutrition_date) = '$Y' and month(nutrition_date) = '$M'
+
+				UNION
+
+				select  concat(person_wbc_nutrition.person_wbc_nutrition_id,'-WBC') as Type,concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,ifnull(person_wbc_nutrition.age_y,0) as age ,
+				nutrition_level.name as nuti_lev ,
+				height_level.name as height_lev ,
+				bmi_level.name as bmi_lev ,nutrition_date as date_serv,
+				if(person_wbc_nutrition.person_nutrition_childdevelop_type_id is null , '#FF0000',
+						if(person_wbc_nutrition.person_nutrition_food_type_id is null , '#FF0000', 
+								if(person_wbc_nutrition.person_nutrition_bottle_type_id is null,'#FF0000',''))) as color
+
+				from person_wbc_nutrition
+				left join nutrition_level on person_wbc_nutrition.nutrition_level = nutrition_level.nutrition_level
+				left join height_level  on   person_wbc_nutrition.height_level = height_level.height_level
+				left join person_wbc  on  person_wbc_nutrition.person_wbc_id = person_wbc.person_wbc_id
+				left join bmi_level  on  person_wbc_nutrition.bmi_level = bmi_level.bmi_level
+				left join person ps on  person_wbc.person_id = ps.person_id
+				where year(nutrition_date) = '$Y' and month(nutrition_date) = '$M' order by date_serv";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อ - สกุล </th>
+										<th>อายุ</th>
+                                        <th>วันที่</th>
+										<th>ภาวะโภชนาการ</th>
+										<th>อายุ / ส่วนสูง</th>
+										<th>น้ำหนัก / ส่วนสูง</th>
+
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+
+			while($result = mysql_fetch_array($query)){
+					$color	= $result['color'];
+					$age_y  = $result['age'];
+					$Name_ = $result['Name_'];
+					$date_serv = get_date_show($result['date_serv']);
+					$nuti_lev  = $result['nuti_lev'];
+					$height_lev  = $result['height_lev'];
+					$bmi_lev  = $result['bmi_lev'];
+					$tb = $tb."	<tr>
+									<td><font color='$color'>$items</font></td>
+									<td><font color='$color'>$Name_</font></td>
+									<td><font color='$color'>$age_y</font></td>
+									<td><font color='$color'>$date_serv</font></td> 
+									<td><font color='$color'>$nuti_lev</font></td> 
+									<td><font color='$color'>$height_lev</font></td> 
+									<td><font color='$color'>$bmi_lev</font></td> 
+								 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-----------------get_nutrition_detail ----------------------
+
+
+
+
+
+
+
+
+function get_mch_table($d1,$d2){
+		$sql = "select year(care_date) as year_,month(care_date) as month_, 
+				concat(month(care_date),'-',year(care_date)) as month_show,ifnull(count(*),0) as C_vn ,ifnull(count(distinct(person_anc.person_id)),0) as C_hn
+				from person_anc_preg_care 
+				left join person_anc on person_anc_preg_care.person_anc_id = person_anc.person_anc_id
+				where  care_date between '$d1' and '$d2' group by month(care_date) order by year(care_date) , month(care_date) ";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>เดือน</th>
+                                        <th>จำนวน (ครั้ง)</th>
+                                        <th>...</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+			$sum_C_hn = 0 ;
+			while($result = mysql_fetch_array($query)){
+					
+					$C_vn  = $result['C_vn'];
+					$C_hn  = $result['C_hn'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$sum_C_hn  = $sum_C_hn + $C_hn ;
+					$tb = $tb."	<tr>
+									<td>$month_show</td>
+									<td>$C_vn</td>
+									<td><a target='bank_' href='showdetail.php?id=mch&Y=$year_&M=$month_'>...</a></td> 
+                                 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>-:-</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-------get_MCH_table --------------------
+
+
+
+	function get_mch_detail($Y,$M){
+		$sql = "select concat(ps.pname ,' ',ps.fname,' ',ps.lname) as Name_ ,person_anc_preg_care.preg_care_number as Num_prec, 
+       person_anc.preg_no as preg_no , person_anc_preg_care.care_date as date_serv ,ps.age_y,ps.cid ,
+		concat(ps.person_id,care_date,person_anc.preg_no,person_anc_preg_care.preg_care_number) as chk_text
+			from person_anc_preg_care
+			left join person_anc on  person_anc_preg_care.person_anc_id = person_anc.person_anc_id 
+			left join person ps on person_anc.person_id = ps.person_id
+			where year(care_date) = '$Y' and month(care_date) = '$M' 
+			order by ps.person_id,date_serv,person_anc.preg_no,person_anc_preg_care.preg_care_number";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อ - สกุล </th>
+                                        <th>วันที่</th>
+										<th>ครรภ์ที่</th>
+										<th>ครั้งที่</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+			$chk_text1  = "";
+			$Name_1     = "";
+			$date_serv1 = "";
+			$preg_no1   = "";
+			$Num_prec1  = "";
+			while($result = mysql_fetch_array($query)){
+					
+					$chk_text  = $result['chk_text'];
+					$Name_ = $result['Name_'];
+					$date_serv = get_date_show($result['date_serv']);
+					$preg_no  = $result['preg_no'];
+					$Num_prec  = $result['Num_prec'];
+					//$sum_C_vn  = $sum_C_vn + $C_vn ;
+					
+					if($chk_text1==$chk_text ){//----------เช็ควันซ้ำ---------
+							$chk_text1 = "";
+							$color = '#FF0000';
+					}else{
+
+							$chk_text1 = $chk_text;
+							$color = '';
+					}//------------------------------------------------------เช็ควันซ้ำ---------
+
+					
+				    if($Name_1==$Name_){//----เช็ควันมากกว่า -------
+						$Name_1   = "";				
+						$date_serv1 = $date_serv;
+							if($date_serv1<>$date_serv){
+								$date_serv1  = "";
+								$diff = date_diff($date_serv1, $date_serv);
+								//echo $diff->format($differenceFormat);
+								$color = '#FF0000';
+								/*if($preg_no1 > $preg_no){
+									$preg_no1 = "";									
+									if($Num_prec1 >= $Num_prec){
+										$Num_prec1 = "";
+										$color = '#FF0000';
+									}else{
+										$Num_prec1 = $Num_prec ;
+									}
+
+								}else{
+									$preg_no1 = $preg_no;
+								} */
+							}else{
+								$date_serv1 = $date_serv;							
+							}  
+
+						}else{
+							$Name_1 = $Name_;
+
+						}//----เช็ควันมากกว่า -------
+
+
+
+					
+
+
+					$tb = $tb."	<tr>
+									<td><font color='$color'>$items</font></td>
+									<td><font color='$color'>$Name_</font></td>
+									<td><font color='$color'>$date_serv</font></td> 
+									<td><font color='$color'>$preg_no</font></td>
+									<td><font color='$color'>$Num_prec</font></td>
+                                 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//---------------/get_mch_detail/--------------------------
+
+
+
+
+	function get_pp_table($d1,$d2){
+		$sql = "select year(care_date) as year_,month(care_date) as month_, 
+				concat(month(care_date),'-',year(care_date)) as month_show,ifnull(count(*),0) as C_vn 
+				from person_wbc_post_care 
+				where  care_date between '$d1' and '$d2' group by month(care_date) order by year(care_date) , month(care_date) ";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>เดือน</th>
+                                        <th>จำนวน (ครั้ง)</th>
+                                        <th>...</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+			while($result = mysql_fetch_array($query)){
+					
+					$C_vn  = $result['C_vn'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$sum_C_hn  = $sum_C_hn + $C_hn ;
+					$tb = $tb."	<tr>
+									<td>$month_show</td>
+									<td>$C_vn</td>
+									<td><a target='bank_' href='showdetail.php?id=pp&Y=$year_&M=$month_'>...</a></td> 
+                                 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>-:-</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-------get_pp_table --------------------
+
+
+
+
+
+	function get_pp_detail($Y,$M){
+		$sql = "select concat(ps.pname ,' ',ps.fname,' ',ps.lname) as Name_ ,person_wbc_post_care.care_number as Num_prec, 
+              person_wbc_post_care.care_date as date_serv ,ps.age_y,ps.cid
+			from person_wbc_post_care
+			left join person_wbc on  person_wbc_post_care.person_wbc_id = person_wbc.person_wbc_id 
+			left join person ps on person_wbc.person_id = ps.person_id
+			where year(care_date) = '$Y' and month(care_date) = '$M' order by Name_ ,date_serv ";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อ - สกุล </th>
+                                        <th>วันที่</th>
+										<th>ครั้งที่</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+
+			while($result = mysql_fetch_array($query)){
+					
+					//$C_vn  = $result['C_vn'];
+					$Name_ = $result['Name_'];
+					$date_serv = get_date_show($result['date_serv']);
+					$preg_no  = $result['preg_no'];
+					$Num_prec  = $result['Num_prec'];
+					//$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$tb = $tb."	<tr>
+									<td>$items</td>
+									<td>$Name_</td>
+									<td>$date_serv</td> 
+									<td>$Num_prec</td>
+                                 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//---------------/get_pp_detail/--------------------------
+
+
+
+
+
+
+
+	function get_survey_table($d1,$d2){
+		$sql = "select year(survey_date) as year_ , month(survey_date) as month_ ,concat(month(survey_date),'-',year(survey_date)) as month_show ,ifnull(count(house_id),0) as C_house ,
+				(select ifnull(count((person_id)),0) from person_visit
+						where YEAR(visit_date)= year(survey_date)  and month(visit_date) = month(survey_date)  ) as C_person
+
+				 from house_survey
+						where survey_date between '$d1' and '$d2' group by YEAR(survey_date),month(survey_date) ";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>เดือน</th>
+                                        <th>จำนวน (หลัง)</th>
+										<th>จำนวน (คน)</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_house = 0;
+			$sum_C_person = 0;
+			while($result = mysql_fetch_array($query)){
+					
+					$C_house  = $result['C_house'];
+					$C_person  = $result['C_person'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$sum_C_house  = $sum_C_house + $C_house ;
+					$sum_C_person  = $sum_C_person + $C_person ;
+					$tb = $tb."	<tr>
+									<td>$month_show</td>
+									<td><a target='bank_' href='showdetail.php?id=sur_house&Y=$year_&M=$month_'>$C_house</a></td>
+									<td><a target='bank_' href='showdetail.php?id=sur_person&Y=$year_&M=$month_'>$C_person</a></td> 
+                                 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_house</td>
+									<th>$sum_C_person</td>
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-------get_survey_table --------------------
+
+
+
+
+	function get_sur_house_detail($Y,$M){
+		$sql = "select village.village_moo,village.village_name , count(*) as C_house ,group_concat(house.address) as address_ from house_survey
+		LEFT JOIN house on house_survey.house_id = house.house_id
+		left JOIN village on house.village_id = village.village_id
+		where year(survey_date)= '$Y' and month(survey_date) = '$M' 
+		group by village.village_id order by village.village_id";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover' style='width:100%'>
+                                <thead>
+                                    <tr>
+                                        <th>หมู่</th>
+                                        <th>ชื่อบ้าน</th>
+                                        <th>จำนวน</th>
+										<th>บ้านเลขที่</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+
+			while($result = mysql_fetch_array($query)){
+					
+					$C_house  = $result['C_house'];
+					$village_name = $result['village_name'];
+					$village_moo = $result['village_moo'];
+					$village_address  = wordwrap($result['address_'],55, "\n", true);
+					//$Num_prec  = $result['Num_prec'];
+					//$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$tb = $tb."	<tr>
+									<td>$village_moo</td>
+									<td>$village_name</td>
+									<td>$C_house</td> 
+									<td>$village_address</td>
+                                 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//---------------/get_sur_house_detail/--------------------------
+
+
+
+
+
+	function get_sur_person_detail($Y,$M){
+		$sql = "select village.village_moo,house.address,
+village.village_name ,count(ps.person_id) as C_person,GROUP_CONCAT(concat(ps.pname,' ',ps.fname,' ',ps.lname,'(',person_visit.visit_date,')')) as pt_visit 
+from person_visit
+left join person ps on person_visit.person_id = ps.person_id
+left join village on ps.village_id = village.village_id
+left join house on ps.house_id = house.house_id
+where YEAR(visit_date)= '$Y' and month(visit_date) = '$M' 
+GROUP BY village.village_id , house.address,village.village_name
+HAVING C_person > 0 
+ORDER BY village.village_id,ps.house_id	";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>หมู่ที่</th>
+                                        <th>ชื่อบ้าน</th>
+										<th>บ้านเลขที่</th>
+                                        <th>จำนวนที่เยี่ยม</th>
+										<th>ชื่อคน</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+
+			while($result = mysql_fetch_array($query)){
+					
+					$C_person  = $result['C_person'];
+					$village_name = $result['village_name'];
+					$village_moo = $result['village_moo'];
+					$village_address  = $result['address'];
+					$pt_visit  = wordwrap($result['pt_visit'],60, "\n", true);
+					//$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$tb = $tb."	<tr>
+									<td>$village_moo</td>
+									<td>$village_name</td>
+									<th>$village_address</th>
+									<td>$C_person</td> 
+									<td>$pt_visit</td>
+                                 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//---------------/get_survey_person_detail/--------------------------
+
+	
+
+
+
+
+function get_development_table($d1,$d2){
+		$sql = "select year(wbc_devel.service_date) as year_ , concat(month(wbc_devel.service_date) , '-' ,year(wbc_devel.service_date)) as month_show, month(wbc_devel.service_date) as month_ , count(*) as C_vn
+		from person_wbc_service wbc_devel
+		where wbc_devel.service_date between '$d1' and '$d2' and 
+		wbc_development_assess_id is not null 
+		group by year(wbc_devel.service_date)  , month(wbc_devel.service_date) ";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>เดือน</th>
+                                        <th>จำนวน </th>
+                                        <th>...</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+			while($result = mysql_fetch_array($query)){					
+					$C_vn  = $result['C_vn'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$C_vn_wbc  = $C_vn;
+
+					 $sql_epi =  "select  ifnull(count(*),0) as C_epi from person_epi_vaccine
+								  where year(vaccine_date) = $year_ and month(vaccine_date) = $month_  and 
+								  wbc_development_assess_id is not null 
+								  group by year(vaccine_date) , month(vaccine_date) " ;
+								$query_epi = mysql_query($sql_epi); 
+								$num_row = mysql_num_rows($query_epi);
+									while($result_epi = mysql_fetch_array($query_epi)){
+										$CC_epi = $result_epi['C_epi'];										
+									}
+
+									$C_vn = $CC_epi + $C_vn ;
+									$sum_C_vn  =  $sum_C_vn+$C_vn_wbc + $CC_epi;
+									$tb = $tb."	<tr>
+													<td>$month_show</td>
+													<td>$C_vn</td>
+													<td><a target='bank_' href='showdetail.php?id=develop&Y=$year_&M=$month_'>...</a></td> 
+												 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>-:-</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//--/get_development_table -------------------
+
+
+
+
+		function get_development_detail($Y,$M){
+			$sql = "select concat(ps_service.person_wbc_id,'-wbc') as Type,
+				concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,ps_service.service_date as date_serv,wbc_devel.wbc_development_assess_name as devel_lev
+				 from person_wbc_service  ps_service
+				left join person_wbc ps_wbc on ps_service.person_wbc_id = ps_wbc.person_wbc_id
+				left join person ps on ps_wbc.person_id = ps.person_id
+				left join wbc_development_assess wbc_devel on  ps_service.wbc_development_assess_id = wbc_devel.wbc_development_assess_id
+				where ps_service.wbc_development_assess_id is not null and  year(ps_service.service_date) = '$Y' and month(ps_service.service_date) = '$M'
+
+				UNION
+
+				select concat(person_epi_vaccine.person_epi_id,'-wbc') as Type,
+				concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,person_epi_vaccine.vaccine_date as date_serv,wbc_development_assess.wbc_development_assess_name as devel_lev
+				from person_epi_vaccine  
+				left join person_epi on person_epi_vaccine.person_epi_id = person_epi.person_epi_id
+				left join person ps on person_epi.person_id = ps.person_id 
+				left join wbc_development_assess  on  person_epi_vaccine.wbc_development_assess_id = wbc_development_assess.wbc_development_assess_id
+				where person_epi_vaccine.wbc_development_assess_id is not null   and  year( person_epi_vaccine.vaccine_date) = '$Y' and month( person_epi_vaccine.vaccine_date) = '$M'
+				ORDER BY date_serv,Name_";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อ - สกุล </th>
+										<th>วันที่</th>
+										<th>ระดับพัฒนาการ</th>
+                                   </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+
+			while($result = mysql_fetch_array($query)){
+					
+					//$age_y  = $result['age'];
+					$Name_ = $result['Name_'];
+					$date_serv = get_date_show($result['date_serv']);
+					$devel_lev  = $result['devel_lev'];
+					//$height_lev  = $result['height_lev'];
+					//$bmi_lev  = $result['bmi_lev'];
+					$tb = $tb."	<tr>
+									<td>$items</td>
+									<td>$Name_</td>
+									<td>$date_serv</td> 
+									<td>$devel_lev</td> 
+
+								 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-----------------get_development_detail ----------------------
+
+
+
+
+
+
+
+
+
+    // ---------------------------------  // ncd .php 
+
+
+
+
+
+
+
+function get_dm($d1,$d2){
+
+		$sql = "select count(clm.hn) as CC
+from clinicmember clm
+where clm.clinic in('001') and regdate between '$d1' and '$d2'
+and  clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+			while($result = mysql_fetch_array($query)){
+				$CC = $result['CC'];
+			}
+		return $CC;
+}//--------------//get_dm--------------------------------
+
+
+
+function get_ht($d1,$d2){
+
+		$sql = "select count(hn) as CC
+from clinicmember clm
+where clm.clinic in('002')and  regdate between '$d1' and '$d2'
+and  clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+			while($result = mysql_fetch_array($query)){
+				$CC = $result['CC'];
+			}
+		return $CC;
+}//--------------//get_ht--------------------------------
+
+
+
+
+function get_dmht($d1,$d2){
+
+		$sql = "select count(clm.hn) as CC
+from clinicmember clm
+where clm.clinic in('001','002') and regdate between '$d1' and '$d2'
+and  clm.hn  in(select hn from clinicmember where with_hypertension = 'Y')";
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+			while($result = mysql_fetch_array($query)){
+				$CC = $result['CC'];
+			}
+		return $CC;
+}//--------------//get_dmht--------------------------------
+
+
+
+
+
+	function get_dm_table($d1,$d2){
+		$sql = "select  year(clm.regdate) as year_, month(clm.regdate) as month_  , count(clm.hn) as total ,concat(month(clm.regdate) , '-' ,year(clm.regdate)) as month_show  ,
+				ifnull(sum(case when clm.clinic_member_status_id = 1 then 1 else 0 end),0) as 'sts_1',
+				ifnull(sum(case when clm.clinic_member_status_id = 2 then 1 else 0 end),0) as 'sts_2' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 3 then 1 else 0 end),0) as 'sts_3' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 4 then 1 else 0 end),0) as 'sts_4' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 5 then 1 else 0 end),0) as 'sts_5' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 6 then 1 else 0 end),0) as 'sts_6' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 7 then 1 else 0 end),0) as 'sts_7' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 8 then 1 else 0 end),0) as 'sts_8' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 9 then 1 else 0 end),0) as 'sts_9' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 10 then 1 else 0 end),0) as 'sts_10' 
+				from clinicmember clm
+				left join clinic_member_status clm_member on clm.clinic_member_status_id = clm_member.clinic_member_status_id
+				where clm.clinic in('001') and clm.regdate between '$d1' and '$d2' 
+				and clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')
+				group by month(clm.regdate)	order by year(clm.regdate) , month(clm.regdate)  ";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th rowspan='2'>เดือน</th>
+                                        <th rowspan='2'>ทั้งหมด</th>
+                                        <th colspan='10'>สถานะ</th>
+
+                                    </tr>
+									 <tr>
+                                        <th>1</th>
+										<th>2</th>
+										<th>3</th>
+										<th>4</th>
+										<th>5</th>
+										<th>6</th>
+										<th>7</th>
+										<th>8</th>
+										<th>9</th>
+										<th>10</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+			$sum_C_st1 = 0;
+			while($result = mysql_fetch_array($query)){
+					
+					$C_vn  = $result['total'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$sts_1	= $result['sts_1'];
+					$sts_2	= $result['sts_2'];
+					$sts_3	= $result['sts_3'];
+					$sts_4	= $result['sts_4'];
+					$sts_5	= $result['sts_5'];
+					$sts_6	= $result['sts_6'];
+					$sts_7	= $result['sts_7'];
+					$sts_8	= $result['sts_8'];
+					$sts_9	= $result['sts_9'];
+					$sts_10	= $result['sts_10'];
+					$sts_11	= $result['sts_11'];
+					$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$sum_C_st1  = $sum_C_st1 + $sts_1;
+					$sum_C_st2  = $sum_C_st2 + $sts_2;
+					$sum_C_st3  = $sum_C_st3 + $sts_3;
+					$sum_C_st4  = $sum_C_st4 + $sts_4;
+					$sum_C_st5  = $sum_C_st5 + $sts_5;
+					$sum_C_st6  = $sum_C_st6 + $sts_6;
+					$sum_C_st7  = $sum_C_st7 + $sts_7;
+					$sum_C_st8  = $sum_C_st8 + $sts_8;
+					$sum_C_st9  = $sum_C_st9 + $sts_9;
+					$sum_C_st10  = $sum_C_st10 + $sts_10;
+					$tb = $tb."	<tr>
+									<td>$month_show</td>
+									<td>$C_vn</td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_1</a></td> 
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_2</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_3</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_4</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_5</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_6</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_7</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_8</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_9</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_10</a></td>
+                                 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>$sum_C_st1</td> 
+									<td>$sum_C_st2</td> 
+									<td>$sum_C_st3</td> 
+									<td>$sum_C_st4</td> 
+									<td>$sum_C_st5</td> 
+									<td>$sum_C_st6</td> 
+									<td>$sum_C_st7</td> 
+									<td>$sum_C_st8</td> 
+									<td>$sum_C_st9</td> 
+									<td>$sum_C_st10</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-------get_dm_table --------------------
+
+
+
+	function get_ht_table($d1,$d2){
+		$sql = "select  year(clm.regdate) as year_, month(clm.regdate) as month_  , count(clm.hn) as total ,concat(month(clm.regdate) , '-' ,year(clm.regdate)) as month_show  ,
+				ifnull(sum(case when clm.clinic_member_status_id = 1 then 1 else 0 end),0) as 'sts_1',
+				ifnull(sum(case when clm.clinic_member_status_id = 2 then 1 else 0 end),0) as 'sts_2' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 3 then 1 else 0 end),0) as 'sts_3' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 4 then 1 else 0 end),0) as 'sts_4' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 5 then 1 else 0 end),0) as 'sts_5' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 6 then 1 else 0 end),0) as 'sts_6' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 7 then 1 else 0 end),0) as 'sts_7' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 8 then 1 else 0 end),0) as 'sts_8' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 9 then 1 else 0 end),0) as 'sts_9' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 10 then 1 else 0 end),0) as 'sts_10' 
+				from clinicmember clm
+				left join clinic_member_status clm_member on clm.clinic_member_status_id = clm_member.clinic_member_status_id
+				where clm.clinic in('002') and clm.regdate between '$d1' and '$d2'
+				and clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')
+				group by month(clm.regdate) order by year(clm.regdate) , month(clm.regdate)  ";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th rowspan='2'>เดือน</th>
+                                        <th rowspan='2'>ทั้งหมด</th>
+                                        <th colspan='10'>สถานะ</th>
+
+                                    </tr>
+									 <tr>
+                                        <th>1</th>
+										<th>2</th>
+										<th>3</th>
+										<th>4</th>
+										<th>5</th>
+										<th>6</th>
+										<th>7</th>
+										<th>8</th>
+										<th>9</th>
+										<th>10</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+			$sum_C_st1 = 0;
+			while($result = mysql_fetch_array($query)){
+					
+					$C_vn  = $result['total'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$sts_1	= $result['sts_1'];
+					$sts_2	= $result['sts_2'];
+					$sts_3	= $result['sts_3'];
+					$sts_4	= $result['sts_4'];
+					$sts_5	= $result['sts_5'];
+					$sts_6	= $result['sts_6'];
+					$sts_7	= $result['sts_7'];
+					$sts_8	= $result['sts_8'];
+					$sts_9	= $result['sts_9'];
+					$sts_10	= $result['sts_10'];
+					$sts_11	= $result['sts_11'];
+					$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$sum_C_st1  = $sum_C_st1 + $sts_1;
+					$sum_C_st2  = $sum_C_st2 + $sts_2;
+					$sum_C_st3  = $sum_C_st3 + $sts_3;
+					$sum_C_st4  = $sum_C_st4 + $sts_4;
+					$sum_C_st5  = $sum_C_st5 + $sts_5;
+					$sum_C_st6  = $sum_C_st6 + $sts_6;
+					$sum_C_st7  = $sum_C_st7 + $sts_7;
+					$sum_C_st8  = $sum_C_st8 + $sts_8;
+					$sum_C_st9  = $sum_C_st9 + $sts_9;
+					$sum_C_st10  = $sum_C_st10 + $sts_10;
+					$tb = $tb."	<tr>
+									<td>$month_show</td>
+									<td>$C_vn</td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_1</a></td> 
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_2</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_3</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_4</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_5</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_6</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_7</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_8</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_9</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_10</a></td>
+                                 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>$sum_C_st1</td> 
+									<td>$sum_C_st2</td> 
+									<td>$sum_C_st3</td> 
+									<td>$sum_C_st4</td> 
+									<td>$sum_C_st5</td> 
+									<td>$sum_C_st6</td> 
+									<td>$sum_C_st7</td> 
+									<td>$sum_C_st8</td> 
+									<td>$sum_C_st9</td> 
+									<td>$sum_C_st10</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-------get_ht_table --------------------
+
+
+
+
+		function get_dmht_table($d1,$d2){
+		$sql = "select  year(clm.regdate) as year_, month(clm.regdate) as month_  , count(clm.hn) as total ,concat(month(clm.regdate) , '-' ,year(clm.regdate)) as month_show  ,
+				ifnull(sum(case when clm.clinic_member_status_id = 1 then 1 else 0 end),0) as 'sts_1',
+				ifnull(sum(case when clm.clinic_member_status_id = 2 then 1 else 0 end),0) as 'sts_2' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 3 then 1 else 0 end),0) as 'sts_3' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 4 then 1 else 0 end),0) as 'sts_4' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 5 then 1 else 0 end),0) as 'sts_5' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 6 then 1 else 0 end),0) as 'sts_6' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 7 then 1 else 0 end),0) as 'sts_7' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 8 then 1 else 0 end),0) as 'sts_8' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 9 then 1 else 0 end),0) as 'sts_9' ,
+				ifnull(sum(case when clm.clinic_member_status_id = 10 then 1 else 0 end),0) as 'sts_10' 
+				from clinicmember clm
+				left join clinic_member_status clm_member on clm.clinic_member_status_id = clm_member.clinic_member_status_id
+				where clm.clinic in('002','001') and clm.regdate between '$d1' and '$d2'
+				and clm.hn in(select hn from clinicmember where with_hypertension = 'Y')
+				group by month(clm.regdate) order by year(clm.regdate) , month(clm.regdate)  ";
+
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th rowspan='2'>เดือน</th>
+                                        <th rowspan='2'>ทั้งหมด</th>
+                                        <th colspan='10'>สถานะ</th>
+
+                                    </tr>
+									 <tr>
+                                        <th>1</th>
+										<th>2</th>
+										<th>3</th>
+										<th>4</th>
+										<th>5</th>
+										<th>6</th>
+										<th>7</th>
+										<th>8</th>
+										<th>9</th>
+										<th>10</th>
+                                    </tr>
+                                </thead>
+                                <tbody> ";
+
+			$sum_C_vn = 0;
+			$sum_C_st1 = 0;
+			while($result = mysql_fetch_array($query)){
+					
+					$C_vn  = $result['total'];
+					$month_show = $result['month_show'];
+					$month_ = $result['month_'];
+					$year_  = $result['year_'];
+					$sts_1	= $result['sts_1'];
+					$sts_2	= $result['sts_2'];
+					$sts_3	= $result['sts_3'];
+					$sts_4	= $result['sts_4'];
+					$sts_5	= $result['sts_5'];
+					$sts_6	= $result['sts_6'];
+					$sts_7	= $result['sts_7'];
+					$sts_8	= $result['sts_8'];
+					$sts_9	= $result['sts_9'];
+					$sts_10	= $result['sts_10'];
+					$sts_11	= $result['sts_11'];
+					$sum_C_vn  = $sum_C_vn + $C_vn ;
+					$sum_C_st1  = $sum_C_st1 + $sts_1;
+					$sum_C_st2  = $sum_C_st2 + $sts_2;
+					$sum_C_st3  = $sum_C_st3 + $sts_3;
+					$sum_C_st4  = $sum_C_st4 + $sts_4;
+					$sum_C_st5  = $sum_C_st5 + $sts_5;
+					$sum_C_st6  = $sum_C_st6 + $sts_6;
+					$sum_C_st7  = $sum_C_st7 + $sts_7;
+					$sum_C_st8  = $sum_C_st8 + $sts_8;
+					$sum_C_st9  = $sum_C_st9 + $sts_9;
+					$sum_C_st10  = $sum_C_st10 + $sts_10;
+					$tb = $tb."	<tr>
+									<td>$month_show</td>
+									<td>$C_vn</td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_1</a></td> 
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_2</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_3</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_4</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_5</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_6</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_7</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_8</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_9</a></td>
+									<td><a target='bank_' href='showdetail.php?id=dm&Y=$year_&M=$month_'>$sts_10</a></td>
+                                 </tr> ";
+			}
+
+					   $tb = $tb."  
+								<tr>
+									<th>รวม</td>
+									<th>$sum_C_vn</td>
+									<td>$sum_C_st1</td> 
+									<td>$sum_C_st2</td> 
+									<td>$sum_C_st3</td> 
+									<td>$sum_C_st4</td> 
+									<td>$sum_C_st5</td> 
+									<td>$sum_C_st6</td> 
+									<td>$sum_C_st7</td> 
+									<td>$sum_C_st8</td> 
+									<td>$sum_C_st9</td> 
+									<td>$sum_C_st10</td> 
+                                 </tr>
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-------get_dmht_table --------------------
+
+
+
+
+
+
+
+
+
+
+
+		function get_dm_service_detail($Y,$M,$rows){
+			
+			if($rows==0){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,lh.order_date as date_serv,lo.lab_order_result
+							from lab_order lo 
+							left join lab_head lh on lo.lab_order_number = lh.lab_order_number 
+							left join patient ps on lh.hn = ps.hn
+							where year(lh.order_date) = '$Y' and month(lh.order_date) = '$M' and lo.lab_items_code = 116 
+							and lh.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('001') 
+							and clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) order by lh.order_date ";
+			}
+			if($rows==1){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,lh.order_date as date_serv,lo.lab_order_result
+							from lab_order lo 
+							left join lab_head lh on lo.lab_order_number = lh.lab_order_number 
+							left join patient ps on lh.hn = ps.hn
+							where year(lh.order_date) = '$Y' and month(lh.order_date) = '$M' and lo.lab_items_code = 116 
+							and lo.lab_order_result <  126 
+							and lh.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('001') 
+							and clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) order by lh.order_date ";
+			}
+			if($rows==2){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,lh.order_date as date_serv,lo.lab_order_result
+							from lab_order lo 
+							left join lab_head lh on lo.lab_order_number = lh.lab_order_number 
+							left join patient ps on lh.hn = ps.hn
+							where year(lh.order_date) = '$Y' and month(lh.order_date) = '$M' and lo.lab_items_code = 116 
+							and lo.lab_order_result between   126 and 154   
+							and lh.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('001') 
+							and clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) order by lh.order_date ";
+			}
+
+			if($rows==3){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,lh.order_date as date_serv,lo.lab_order_result
+							from lab_order lo 
+							left join lab_head lh on lo.lab_order_number = lh.lab_order_number 
+							left join patient ps on lh.hn = ps.hn
+							where year(lh.order_date) = '$Y' and month(lh.order_date) = '$M' and lo.lab_items_code = 116 
+							and lo.lab_order_result between   155 and 182   
+							and lh.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('001') 
+							and clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) order by lh.order_date ";
+			}
+			if($rows==4){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,lh.order_date as date_serv,lo.lab_order_result
+							from lab_order lo 
+							left join lab_head lh on lo.lab_order_number = lh.lab_order_number 
+							left join patient ps on lh.hn = ps.hn
+							where year(lh.order_date) = '$Y' and month(lh.order_date) = '$M' and lo.lab_items_code = 116 
+							and lo.lab_order_result  > 182   
+							and lh.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('001') 
+							and clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) order by lh.order_date ";
+			}
+			if($rows==5){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,lh.order_date as date_serv,lo.lab_order_result
+							from lab_order lo 
+							left join lab_head lh on lo.lab_order_number = lh.lab_order_number 
+							left join patient ps on lh.hn = ps.hn
+							where year(lh.order_date) = '$Y' and month(lh.order_date) = '$M' and lo.lab_items_code = 116 
+							and lo.lab_order_result is null   
+							and lh.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('001') 
+							and clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) order by lh.order_date ";
+			}
+
+		
+		
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อ - สกุล </th>
+										<th>วันที่</th>
+										<th>ระดับน้ำตาล</th>
+                                   </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+
+			while($result = mysql_fetch_array($query)){
+					
+					//$age_y  = $result['age'];
+					$Name_ = $result['Name_'];
+					$date_serv = get_date_show($result['date_serv']);
+					$lab_order_result  = $result['lab_order_result'];
+					//$height_lev  = $result['height_lev'];
+					//$bmi_lev  = $result['bmi_lev'];
+					$tb = $tb."	<tr>
+									<td>$items</td>
+									<td>$Name_</td>
+									<td>$date_serv</td> 
+									<td>$lab_order_result</td> 
+								 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-----------------get_dm_service_detail ----------------------
+
+
+
+
+
+
+
+
+
+
+
+
+	function get_ht_service_detail($Y,$M,$rows){
+			
+			if($rows==0){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,opd.vstdate as date_serv,concat(round(opd.bps,0),'/',round(opd.bpd,0)) as BP
+							from opdscreen opd  
+							left join patient ps on opd.hn = ps.hn 
+							left join vn_stat on opd.vn = vn_stat.vn 
+							where  year(opd.vstdate)='$Y' and month(opd.vstdate) = '$M' 
+							and opd.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('002') and clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) and vn_stat.pdx not like'Z%' order by opd.vstdate  ";
+			}
+			if($rows==1){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,opd.vstdate as date_serv,concat(round(opd.bps,0),'/',round(opd.bpd,0)) as BP
+							from opdscreen opd  
+							left join patient ps on opd.hn = ps.hn 
+							left join vn_stat on opd.vn = vn_stat.vn 
+							where opd.vn in(select opd.vn  from opdscreen opd left join vn_stat on opd.vn = vn_stat.vn
+								where year(opd.vstdate)='$Y' and month(opd.vstdate) = '$M'  
+								and opd.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('002') and 
+								clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) and vn_stat.pdx not like'Z%'
+								and ((case when opd.bps between 5 and  139 then 
+													(case when	opd.bpd between 5 and 90 then 0 
+																when  opd.bpd between '90' and '99' then 1 
+																when  opd.bpd between '100' and '109' then 2 
+																when  opd.bpd > 109 then 3 else '#' end )
+									   when opd.bps between '140' and '159' then 1
+											 when opd.bps between '160' and '179' then 2
+									   when opd.bps > 179 then 3
+								else '#' end )) = '0')  order by opd.vstdate ";
+			}
+			if($rows==2){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,opd.vstdate as date_serv,concat(round(opd.bps,0),'/',round(opd.bpd,0)) as BP
+							from opdscreen opd  
+							left join patient ps on opd.hn = ps.hn 
+							left join vn_stat on opd.vn = vn_stat.vn 
+							where opd.vn in(select opd.vn  from opdscreen opd left join vn_stat on opd.vn = vn_stat.vn
+								where year(opd.vstdate)='$Y' and month(opd.vstdate) = '$M'  
+								and opd.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('002') and 
+								clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) and vn_stat.pdx not like'Z%'
+								and ((case when opd.bps between 5 and  139 then 
+													(case when	opd.bpd between 5 and 90 then 0 
+																when  opd.bpd between '90' and '99' then 1 
+																when  opd.bpd between '100' and '109' then 2 
+																when  opd.bpd > 109 then 3 else '#' end )
+									   when opd.bps between '140' and '159' then 1
+											 when opd.bps between '160' and '179' then 2
+									   when opd.bps > 179 then 3
+								else '#' end )) = '1')  order by opd.vstdate  ";
+			}
+
+			if($rows==3){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,opd.vstdate as date_serv,concat(round(opd.bps,0),'/',round(opd.bpd,0)) as BP
+							from opdscreen opd  
+							left join patient ps on opd.hn = ps.hn 
+							left join vn_stat on opd.vn = vn_stat.vn 
+							where opd.vn in(select opd.vn  from opdscreen opd left join vn_stat on opd.vn = vn_stat.vn
+								where year(opd.vstdate)='$Y' and month(opd.vstdate) = '$M'  
+								and opd.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('002') and 
+								clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) and vn_stat.pdx not like'Z%'
+								and ((case when opd.bps between 5 and  139 then 
+													(case when	opd.bpd between 5 and 90 then 0 
+																when  opd.bpd between '90' and '99' then 1 
+																when  opd.bpd between '100' and '109' then 2 
+																when  opd.bpd > 109 then 3 else '#' end )
+									   when opd.bps between '140' and '159' then 1
+											 when opd.bps between '160' and '179' then 2
+									   when opd.bps > 179 then 3
+								else '#' end )) = '2')  order by opd.vstdate  ";
+			}
+			if($rows==4){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,opd.vstdate as date_serv,concat(round(opd.bps,0),'/',round(opd.bpd,0)) as BP
+							from opdscreen opd  
+							left join patient ps on opd.hn = ps.hn 
+							left join vn_stat on opd.vn = vn_stat.vn 
+							where opd.vn in(select opd.vn  from opdscreen opd left join vn_stat on opd.vn = vn_stat.vn
+								where year(opd.vstdate)='$Y' and month(opd.vstdate) = '$M'  
+								and opd.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('002') and 
+								clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) and vn_stat.pdx not like'Z%'
+								and ((case when opd.bps between 5 and  139 then 
+													(case when	opd.bpd between 5 and 90 then 0 
+																when  opd.bpd between '90' and '99' then 1 
+																when  opd.bpd between '100' and '109' then 2 
+																when  opd.bpd > 109 then 3 else '#' end )
+									   when opd.bps between '140' and '159' then 1
+											 when opd.bps between '160' and '179' then 2
+									   when opd.bps > 179 then 3
+								else '#' end )) = '3') order by opd.vstdate  ";
+			}
+			if($rows==5){
+				$sql = "select 	concat(ps.pname , ' ',ps.fname,' ',ps.lname) as Name_ ,opd.vstdate as date_serv,concat(round(opd.bps,0),'/',round(opd.bpd,0)) as BP
+							from opdscreen opd  
+							left join patient ps on opd.hn = ps.hn 
+							left join vn_stat on opd.vn = vn_stat.vn 
+							where opd.vn in(select opd.vn  from opdscreen opd left join vn_stat on opd.vn = vn_stat.vn
+								where year(opd.vstdate)='$Y' and month(opd.vstdate) = '$M'  
+								and opd.hn in(select distinct(clm.hn) from clinicmember clm where clm.clinic in('002') and 
+								clm.hn not in(select hn from clinicmember where with_hypertension = 'Y')) and vn_stat.pdx not like'Z%'
+								and ((case when opd.bps between 5 and  139 then 
+													(case when	opd.bpd between 5 and 90 then 0 
+																when  opd.bpd between '90' and '99' then 1 
+																when  opd.bpd between '100' and '109' then 2 
+																when  opd.bpd > 109 then 3 else '#' end )
+									   when opd.bps between '140' and '159' then 1
+											 when opd.bps between '160' and '179' then 2
+									   when opd.bps > 179 then 3
+								else '#' end )) = '#') order by opd.vstdate  ";
+			}
+
+		
+		$query = mysql_query($sql);
+		$num_row = mysql_num_rows($query);
+		$tb  = "<table class='table table-bordered table-hover table-striped'>
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อ - สกุล </th>
+										<th>วันที่</th>
+										<th>ระดับความดัน</th>
+                                   </tr>
+                                </thead>
+                                <tbody> ";
+
+			$items = 1;
+
+			while($result = mysql_fetch_array($query)){
+					
+					//$age_y  = $result['age'];
+					$Name_ = $result['Name_'];
+					$date_serv = get_date_show($result['date_serv']);
+					$BP  = $result['BP'];
+					//$height_lev  = $result['height_lev'];
+					//$bmi_lev  = $result['bmi_lev'];
+					$tb = $tb."	<tr>
+									<td>$items</td>
+									<td>$Name_</td>
+									<td>$date_serv</td> 
+									<td>$BP</td> 
+								 </tr> ";
+					$items = $items+1;
+			}
+
+					   $tb = $tb."  
+								</tbody>
+                            </table> ";
+					return $tb;
+
+	}//-----------------get_ht_service_detail ----------------------
+
+
+
+
+
+
+
+
+?>

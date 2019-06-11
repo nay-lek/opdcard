@@ -1,0 +1,203 @@
+<?php 
+		session_start();
+		include("conn/conn.php");
+		include("libs/function.php");
+		$HN = $_SESSION['HN'];
+
+
+			$sql = "select  h.hn,concat(p.pname,' ',p.fname,' ',p.lname) as Name ,h.order_date as vstdate  ,p.sex,l.lab_order_result,h.department,
+CASE  WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and l.lab_order_result > 0.7   THEN 
+  ROUND((144*((pow((l.lab_order_result/0.7),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and (l.lab_order_result < 0.8 )   THEN
+   ROUND((144*((pow((l.lab_order_result/0.7),-0.329)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and l.lab_order_result > 0.9   THEN 
+   ROUND((141*((pow((l.lab_order_result/0.9),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and (l.lab_order_result < 1 )   THEN
+    ROUND((141*((pow((l.lab_order_result/0.9),-0.411)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+ END  as 'eGRF_value' , (if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1))) as  age_y 
+,
+if((CASE  WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and l.lab_order_result > 0.7   THEN 
+  ROUND((144*((pow((l.lab_order_result/0.7),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and (l.lab_order_result < 0.8 )   THEN
+   ROUND((144*((pow((l.lab_order_result/0.7),-0.329)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and l.lab_order_result > 0.9   THEN 
+   ROUND((141*((pow((l.lab_order_result/0.9),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and (l.lab_order_result < 1 )   THEN
+    ROUND((141*((pow((l.lab_order_result/0.9),-0.411)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+ END) > 90 , 1 ,
+        if((CASE  WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and l.lab_order_result > 0.7   THEN 
+  ROUND((144*((pow((l.lab_order_result/0.7),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and (l.lab_order_result < 0.8 )   THEN
+   ROUND((144*((pow((l.lab_order_result/0.7),-0.329)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and l.lab_order_result > 0.9   THEN 
+   ROUND((141*((pow((l.lab_order_result/0.9),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and (l.lab_order_result < 1 )   THEN
+    ROUND((141*((pow((l.lab_order_result/0.9),-0.411)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+ END)>60,2,
+           if((CASE  WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and l.lab_order_result > 0.7   THEN 
+  ROUND((144*((pow((l.lab_order_result/0.7),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and (l.lab_order_result < 0.8 )   THEN
+   ROUND((144*((pow((l.lab_order_result/0.7),-0.329)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and l.lab_order_result > 0.9   THEN 
+   ROUND((141*((pow((l.lab_order_result/0.9),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and (l.lab_order_result < 1 )   THEN
+    ROUND((141*((pow((l.lab_order_result/0.9),-0.411)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+ END)>30,3,
+           if((CASE  WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and l.lab_order_result > 0.7   THEN 
+  ROUND((144*((pow((l.lab_order_result/0.7),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 2 and (l.lab_order_result < 0.8 )   THEN
+   ROUND((144*((pow((l.lab_order_result/0.7),-0.329)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and l.lab_order_result > 0.9   THEN 
+   ROUND((141*((pow((l.lab_order_result/0.9),-1.209)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+          WHEN l.lab_items_code = (select lab_items_code from lab_items where lab_items_name = (select sys_value from sys_var where sys_name like '%lab_link_cr%')
+)  and p.sex = 1 and (l.lab_order_result < 1 )   THEN
+    ROUND((141*((pow((l.lab_order_result/0.9),-0.411)) * pow(0.993,(if(h.department ='OPD',(select age_y from vn_stat where vn=h.vn limit 1),(select age_y from an_stat where an=h.vn limit 1)))))),2)
+ END)>15,4,5)))) as ckd_stage
+from lab_head h 
+left join patient p on h.hn = p.hn
+left join lab_order l on h.lab_order_number = l.lab_order_number
+where  l.lab_items_code = 114  and l.lab_order_result <>''
+and h.hn = $HN ";
+			//echo $sql;			
+			$query = mysql_query($sql);
+			$rows  = mysql_num_rows($query);
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+   <!-- <title>SB Admin - Bootstrap Admin Template</title>-->
+		<title>โรงพยาบาลผาขาว</title>
+	
+	<!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/sb-admin.css" rel="stylesheet">
+
+    <!-- Morris Charts CSS -->
+    <link href="css/plugins/morris.css" rel="stylesheet">
+    
+    <!-- Custom Fonts -->
+    <link href="font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+
+</head>
+
+<body>
+		<div id="page-wrapper">
+
+                <div class="row">
+                        <h1 class="page-header"> ----------> CKD STAGE</h1>
+                </div>
+                <!-- /.row -->
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="alert alert-info alert-dismissable">
+							
+							<table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th colspan="7"> HN := <?php echo $HN; ?>    จำนวนตรวจ  :=  <?php echo $rows;?> ครั้ง </th>
+                                    </tr>
+									<tr>
+										<th>ชื่อ-สกุล</th>
+                                        <th>วันที่ตรวจ</th>
+                                        <th>อายุ</th>
+										<th>แผนก</th>
+                                        <th>ผล LAB</th>
+                                        <th>ค่า eGRF</th>
+										<th>CKD Stage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+								<?php  while($result=mysql_fetch_array($query)){ 
+									$vstdate  = get_date_show($result['vstdate']);
+									$lab_result =  $result['lab_order_result'];
+									$ptname =  $result['Name'];
+									$age_y  =  $result['age_y'];
+									$department = $result['department'];
+									$eGRF  = $result['eGRF_value'];
+									$ckd  = $result['ckd_stage'];
+                                   echo  "<tr>
+											<td>$ptname</td>
+											<td>$vstdate</td>
+											<td>$age_y</td>
+											<td>$department</td>
+											<td>$lab_result</td>
+											<td>$eGRF</td> 
+											<td>$ckd</td> 
+                                         </tr>";
+						         } ?> 
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.row -->
+
+		</div>
+		<!-- /wrapper -->
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- jQuery Version 1.11.0 -->
+    <script src="js/jquery-1.11.0.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Morris Charts JavaScript -->
+    <script src="js/plugins/morris/raphael.min.js"></script>
+    <script src="js/plugins/morris/morris.min.js"></script>
+    <script src="js/plugins/morris/morris-data.js"></script>
+
+
+
+</body>
+
+</html>
